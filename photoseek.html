@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Web Studio</title>
+<style>
+  :root {
+    --bg: #1a1a1a; --panel: #222; --panel2: #2a2a2a;
+    --border: #333; --text: #eee; --dim: #888;
+    --accent: #3b82f6; --danger: #ef4444;
+  }
+  body { height: 100vh; background: var(--bg); color: var(--text);
+    font-family: system-ui, sans-serif; font-size: 13px;
+    display: flex; flex-direction: column; overflow: hidden; }
+  button { background: #333; color: var(--text); border: 1px solid #444;
+    padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px;
+    transition: background .15s, border-color .15s; }
+  button:hover:not(:disabled) { background: #444; }
+  button:disabled { opacity: .35; cursor: not-allowed; }
+  button.on { background: var(--accent); border-color: var(--accent); }
+  select { background: #333; color: var(--text); border: 1px solid #444;
+    border-radius: 4px; padding: 4px; font-size: 12px; }
+  header { height: 48px; background: var(--panel); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 14px; gap: 12px; flex-shrink: 0; }
+  .logo { font-weight: 800; font-size: 16px; } .logo span { color: var(--accent); }
+  .modes { display: flex; background: var(--panel2); border-radius: 6px; padding: 3px; }
+  .modes button { background: transparent; border: none; padding: 6px 16px; }
+  .modes button.on { background: var(--accent); color: #fff; }
+  .grow { flex: 1; }
+  #photo, #video { flex: 1; display: none; overflow: hidden; min-height: 0; }
+  #photo.on, #video.on { display: flex; }
+
+  /* PHOTO */
+  #photo .tools { width: 52px; background: var(--panel); border-right: 1px solid var(--border);
+    padding: 8px 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  #photo .tools button { width: 38px; height: 38px; padding: 0; font-size: 18px;
+    background: transparent; border: 1px solid transparent; }
+  #photo .tools button.on { background: var(--accent); }
+  #photo .canvas-wrap { flex: 1; display: flex; align-items: center; justify-content: center;
+    background: #000; overflow: auto; padding: 20px; position: relative; }
+  #photo canvas {
+    background: repeating-conic-gradient(#c9c9c9 0 25%, #f2f2f2 0 50%) 0 0 / 16px 16px;
+    box-shadow: 0 0 20px #000; cursor: crosshair; touch-action: none; }
+  #cursor-ring { position: fixed; pointer-events: none;
+    border: 1.5px solid rgba(255,255,255,.9); border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(0,0,0,.8); transform: translate(-50%, -50%);
+    z-index: 100; display: none; }
+  #photo .side { width: 290px; background: var(--panel); border-left: 1px solid var(--border);
+    overflow-y: auto; flex-shrink: 0; }
+  .tab-bar { display: flex; background: var(--panel2); border-bottom: 1px solid var(--border); }
+  .tab-bar button { flex: 1; background: transparent; border: none; border-radius: 0;
+    padding: 10px 0; color: var(--dim); border-bottom: 2px solid transparent; }
+  .tab-bar button.on { color: #fff; border-bottom-color: var(--accent); }
+  .tab { display: none; padding: 12px; } .tab.on { display: block; }
+  .grp { background: var(--panel2); padding: 10px; border-radius: 6px; margin-bottom: 10px; }
+  .grp h4 { font-size: 11px; color: var(--dim); text-transform: uppercase; margin-bottom: 8px; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .row:last-child { margin-bottom: 0; }
+  .row label { width: 70px; font-size: 11px; color: #999; }
+  .row input[type=range] { flex: 1; }
+  input[type=color] { width: 40px; height: 26px; border: none; background: none; cursor: pointer; }
+  .layer { display: flex; align-items: center; gap: 6px; padding: 6px 8px; background: #333;
+    border-radius: 4px; margin-bottom: 4px; cursor: pointer; border: 1px solid transparent; }
+  .layer.on { border-color: var(--accent); background: rgba(59,130,246,.2); }
+  .layer .eye { cursor: pointer; user-select: none; }
+  .layer .op { width: 60px !important; flex: none !important; }
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .filters button { padding: 10px 4px; font-size: 11px; }
+  .hint { font-size: 11px; color: #999; margin: 6px 0 0; line-height: 1.4; }
+
+  /* VIDEO */
+  #video { flex-direction: column; }
+  #video .main { flex: 1; display: flex; min-height: 0; position: relative; }
+  #video .preview { flex: 1; background: #000; display: flex; align-items: center;
+    justify-content: center; position: relative; }
+  #video .preview canvas { max-width: 100%; max-height: 100%; }
+  #video .controls { position: absolute; bottom: 15px; display: flex; gap: 8px;
+    background: rgba(0,0,0,.7); padding: 8px 16px; border-radius: 30px; align-items: center; }
+  #video .controls button { background: none; border: none; color: #fff;
+    font-size: 16px; padding: 6px; }
+  #video .controls button:hover { background: rgba(255,255,255,.1); }
+  #video .controls #play { width: 40px; height: 40px; background: var(--danger);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  #video .controls #play:hover { background: #dc2626; }
+  #video .side { width: 260px; background: var(--panel); border-left: 1px solid var(--border);
+    padding: 12px; overflow-y: auto; flex-shrink: 0; }
+  #video .side h3 { font-size: 11px; color: var(--dim); text-transform: uppercase;
+    margin: 12px 0 8px; } #video .side h3:first-child { margin-top: 0; }
+  #video .side button { width: 100%; margin-bottom: 6px; }
+  .media-item { padding: 8px; background: #333; border-radius: 4px; margin-bottom: 5px;
+    cursor: pointer; font-size: 11px; display: flex; gap: 6px; align-items: center; }
+  .media-item:hover { background: #444; }
+  .media-item .del { margin-left: auto; opacity: .6; padding: 0 4px; }
+  .media-item .del:hover { opacity: 1; color: var(--danger); }
+  #video .timeline { height: 220px; background: var(--panel); border-top: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0; }
+  .tl-top { height: 34px; background: var(--panel2); display: flex; align-items: center;
+    padding: 0 12px; justify-content: space-between; border-bottom: 1px solid var(--border);
+    gap: 10px; }
+  .tl-top span { font-size: 11px; color: var(--dim); }
+  .tl-top .zoom { display: flex; align-items: center; gap: 6px; }
+  .tl-top input[type=range] { width: 110px; }
+  .tl-body { flex: 1; overflow-x: auto; overflow-y: auto; position: relative; padding-left: 80px; }
+  .track { height: 60px; border-bottom: 1px solid var(--panel2); position: relative;
+    min-width: 100%; }
+  .track .label { position: absolute; left: -80px; top: 0; bottom: 0; width: 80px;
+    background: #252525; border-right: 1px solid var(--border); display: flex;
+    align-items: center; justify-content: center; font-size: 10px; color: var(--dim); }
+  .clip { position: absolute; top: 8px; height: 44px; border-radius: 4px; color: #fff;
+    font-size: 11px; display: flex; align-items: center; padding: 0 10px;
+    cursor: grab; overflow: hidden; white-space: nowrap; user-select: none; }
+  .clip:active { cursor: grabbing; }
+  .clip.sel { outline: 2px solid #fff; outline-offset: -2px; }
+  .clip.vid { background: var(--accent); }
+  .clip.img { background: #f59e0b; }
+  .clip.txt { background: #a855f7; }
+  .clip .trim { position: absolute; top: 0; bottom: 0; width: 6px; cursor: ew-resize;
+    background: rgba(255,255,255,.22); }
+  .clip .trim:hover { background: rgba(255,255,255,.55); }
+  .clip .trim.l { left: 0; } .clip .trim.r { right: 0; }
+  #playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--danger);
+    left: 80px; pointer-events: none; z-index: 10; }
+  #playhead::before { content: ''; position: absolute; top: 0; left: -6px;
+    border: 7px solid transparent; border-top-color: var(--danger); }
+  .empty { color: #666; font-size: 11px; padding: 8px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Web<span>Studio</span></div>
+  <div class="modes">
+    <button class="on" onclick="switchMode('photo',this)">Фото</button>
+    <button onclick="switchMode('video',this)">Видео</button>
+  </div>
+  <div class="grow"></div>
+  <div id="photo-btns" style="display:flex;gap:6px">
+    <button id="undo-btn" onclick="undo()" title="Ctrl+Z">↶</button>
+    <button id="redo-btn" onclick="redo()" title="Ctrl+Shift+Z">↷</button>
+    <button onclick="$('photo-file').click()">+ Импорт</button>
+    <button onclick="savePhoto()" style="background:var(--accent);border-color:var(--accent)">Скачать PNG</button>
+  </div>
+  <div id="video-btns" style="display:none;gap:6px">
+    <button onclick="$('vid-file').click()">+ Импорт</button>
+    <button onclick="exportVid()" style="background:var(--danger);border-color:var(--danger)">Экспорт</button>
+  </div>
+</header>
+
+<!-- ===== PHOTO ===== -->
+<div id="photo" class="on">
+  <div class="tools">
+    <button class="on" data-t="brush" title="Кисть (B)">🖌</button>
+    <button data-t="eraser" title="Ластик (E)">🧽</button>
+    <button data-t="fill" title="Заливка (F)">🪣</button>
+    <button data-t="wand" title="Волшебная палочка — стереть область по цвету (W)">🪄</button>
+    <button data-t="pick" title="Пипетка (I)">💧</button>
+    <button data-t="line" title="Линия (L)">＼</button>
+    <button data-t="rect" title="Прямоугольник (R)">▭</button>
+    <button data-t="ellipse" title="Эллипс (O)">◯</button>
+  </div>
+  <div class="canvas-wrap"><canvas id="pcv" width="800" height="600"></canvas></div>
+  <div class="side">
+    <div class="tab-bar">
+      <button class="on" onclick="showTab('props',this)">Свойства</button>
+      <button onclick="showTab('layers',this)">Слои</button>
+      <button onclick="showTab('fx',this)">Эффекты</button>
+    </div>
+    <div id="t-props" class="tab on">
+      <div class="grp">
+        <h4>Цвет</h4>
+        <input type="color" id="pcolor" value="#3b82f6">
+      </div>
+      <div class="grp">
+        <h4>Размер кисти: <span id="psize-val">8</span>px</h4>
+        <input type="range" id="psize" min="1" max="120" value="8" style="width:100%">
+      </div>
+      <div class="grp">
+        <h4>Допуск (палочка / фон): <span id="ptol-val">30</span></h4>
+        <input type="range" id="ptol" min="0" max="120" value="30" style="width:100%">
+      </div>
+    </div>
+    <div id="t-layers" class="tab">
+      <div class="grp">
+        <button onclick="addLayer()" style="width:100%;margin-bottom:6px">+ Новый слой</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button onclick="delLayer()">Удалить</button>
+          <button onclick="mergeDown()">Слить вниз</button>
+          <button onclick="dupLayer()">Дублировать</button>
+          <button onclick="transformLayer('flipH')">Отразить ↔</button>
+          <button onclick="transformLayer('flipV')">Отразить ↕</button>
+          <button onclick="transformLayer('rot')">Повернуть ⟳</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <label>Режим</label>
+          <select id="blend-sel" style="flex:1">
+            <option value="source-over">Обычный</option>
+            <option value="multiply">Умножение</option>
+            <option value="screen">Экран</option>
+            <option value="overlay">Оверлей</option>
+            <option value="darken">Темнее</option>
+            <option value="lighten">Светлее</option>
+          </select>
+        </div>
+      </div>
+      <div id="layer-list"></div>
+    </div>
+    <div id="t-fx" class="tab">
+      <div class="grp">
+        <h4>Вырезка фона</h4>
+        <button onclick="cutBackground()" style="width:100%;margin-bottom:6px">🪄 Убрать фон (по краям)</button>
+        <p class="hint">Определяет цвет фона по углам и удаляет его. Или возьмите инструмент 🪄 и кликните прямо по фону. Допуск — во вкладке «Свойства».</p>
+      </div>
+      <div class="grp">
+        <h4>Фильтры (применить к слою)</h4>
+        <div class="filters">
+          <button onclick="applyFx('grayscale(1)')">Ч/Б</button>
+          <button onclick="applyFx('sepia(1)')">Сепия</button>
+          <button onclick="applyFx('invert(1)')">Инверсия</button>
+          <button onclick="applyFx('blur(3px)')">Размытие</button>
+          <button onclick="applyFx('brightness(1.4)')">Светлее</button>
+          <button onclick="applyFx('contrast(1.5)')">Контраст</button>
+          <button onclick="applyFx('saturate(2)')">Насыщ.</button>
+          <button onclick="applyFx('hue-rotate(90deg)')">Оттенок</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VIDEO ===== -->
+<div id="video">
+  <div class="main">
+    <div class="preview">
+      <canvas id="vcv" width="800" height="450"></canvas>
+      <div class="controls">
+        <button onclick="vidSeek(-1)" title="Назад 1с">⏮</button>
+        <button id="play" onclick="vidToggle()" title="Пробел">▶</button>
+        <button onclick="vidSeek(1)" title="Вперёд 1с">⏭</button>
+        <button id="mute-btn" onclick="toggleMute()" title="Звук">🔊</button>
+        <span id="vtime" style="font-family:monospace;color:#fff;min-width:60px;text-align:center">00:00.00</span>
+      </div>
+    </div>
+    <div class="side">
+      <h3>Медиа</h3>
+      <button onclick="$('vid-file').click()">+ Загрузить видео/фото</button>
+      <div id="media-list" style="margin-top:8px"></div>
+      <h3>Действия</h3>
+      <button onclick="addText()">+ Добавить текст</button>
+      <button onclick="splitClip()">✂ Разрезать (S)</button>
+      <button onclick="delClip()">🗑 Удалить клип (Del)</button>
+      <h3>Эффект клипа</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
+        <button onclick="setFx('none')">Обычный</button>
+        <button onclick="setFx('grayscale(1)')">Ч/Б</button>
+        <button onclick="setFx('invert(1)')">Негатив</button>
+        <button onclick="setFx('blur(3px)')">Размытие</button>
+        <button onclick="setFx('sepia(1)')">Сепия</button>
+        <button onclick="setFx('zoom')">Зум</button>
+      </div>
+    </div>
+  </div>
+  <div class="timeline">
+    <div class="tl-top">
+      <span>⏱ Таймлайн</span>
+      <div class="zoom">
+        <span>Масштаб</span>
+        <input type="range" id="tl-zoom" min="20" max="200" value="60">
+      </div>
+    </div>
+    <div class="tl-body" id="tl-body">
+      <div id="playhead"></div>
+      <div id="tracks"></div>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="vid-file" accept="video/*,image/*" multiple hidden>
+<input type="file" id="photo-file" accept="image/*" hidden>
+<div id="hidden-media" style="display:none"></div>
+<div id="cursor-ring"></div>
+
+<script>
+/* ============================================
+   УТИЛИТЫ
+   ============================================ */
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const fmtTime = (s, ms) => {
+  s = Math.max(0, s);
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  const base = `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  return ms ? base + '.' + String(Math.floor((s % 1) * 100)).padStart(2,'0') : base;
+};
+const hexToRgb = h => {
+  const m = h.replace('#','').match(/.{2}/g);
+  return [parseInt(m[0],16), parseInt(m[1],16), parseInt(m[2],16)];
+};
+
+/* ============================================
+   РЕЖИМЫ
+   ============================================ */
+function switchMode(m, btn) {
+  if (m !== 'video' && V.playing) vidToggle();
+  document.querySelectorAll('.modes button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  $('photo').classList.toggle('on', m === 'photo');
+  $('video').classList.toggle('on', m === 'video');
+  $('photo-btns').style.display = m === 'photo' ? 'flex' : 'none';
+  $('video-btns').style.display = m === 'video' ? 'flex' : 'none';
+  if (m === 'video') initVideo();
+  $('cursor-ring').style.display = 'none';
+}
+
+function showTab(id, btn) {
+  btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  ['props','layers','fx'].forEach(t => $('t-' + t).classList.remove('on'));
+  $('t-' + id).classList.add('on');
+}
+
+/* ============================================
+   ФОТОРЕДАКТОР
+   ============================================ */
+const pcv = $('pcv');
+const pctx = pcv.getContext('2d', { willReadFrequently: true });
+const ring = $('cursor-ring');
+
+const P = {
+  layers: [], active: 0, tool: 'brush', color: '#3b82f6', size: 8, tol: 30,
+  drawing: false, lastPt: null,
+  shapeStart: null, shapeSnap: null,
+  history: [], histIdx: -1, lock: false, maxHistory: 25
+};
+
+function newLayer(name, opacity = 1) {
+  const c = document.createElement('canvas');
+  c.width = pcv.width; c.height = pcv.height;
+  return { name, canvas: c, ctx: c.getContext('2d'), visible: true, opacity, blend: 'source-over' };
+}
+
+function initPhoto() {
+  P.layers = [newLayer('Фон')];
+  P.layers[0].ctx.fillStyle = '#fff';
+  P.layers[0].ctx.fillRect(0, 0, pcv.width, pcv.height);
+  P.active = 0;
+  renderLayers();
+  compose();
+  pushHist();
+}
+
+function compose() {
+  pctx.clearRect(0, 0, pcv.width, pcv.height);
+  for (const l of P.layers) {
+    if (!l.visible) continue;
+    pctx.globalAlpha = l.opacity;
+    pctx.globalCompositeOperation = l.blend || 'source-over';
+    pctx.drawImage(l.canvas, 0, 0);
+  }
+  pctx.globalAlpha = 1;
+  pctx.globalCompositeOperation = 'source-over';
+}
+
+function renderLayers() {
+  const box = $('layer-list');
+  box.innerHTML = '';
+  P.layers.slice().reverse().forEach((l, i) => {
+    const idx = P.layers.length - 1 - i;
+    const d = document.createElement('div');
+    d.className = 'layer' + (idx === P.active ? ' on' : '');
+    d.innerHTML = `
+      <span class="eye" title="Видимость">${l.visible ? '👁' : '🚫'}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${escapeHtml(l.name)}</span>
+      <input type="range" class="op" min="0" max="100" value="${Math.round(l.opacity * 100)}" title="Прозрачность">
+    `;
+    d.querySelector('.eye').onclick = e => {
+      e.stopPropagation();
+      l.visible = !l.visible;
+      renderLayers(); compose(); pushHist();
+    };
+    const op = d.querySelector('.op');
+    op.onclick = e => e.stopPropagation();
+    op.oninput = e => { l.opacity = +e.target.value / 100; compose(); };
+    op.onchange = () => pushHist();
+    d.onclick = () => { P.active = idx; renderLayers(); };
+    box.appendChild(d);
+  });
+  const sel = $('blend-sel');
+  if (sel) sel.value = P.layers[P.active]?.blend || 'source-over';
+}
+
+$('blend-sel').onchange = e => {
+  const l = P.layers[P.active];
+  if (!l) return;
+  l.blend = e.target.value;
+  compose(); pushHist();
+};
+
+document.querySelectorAll('#photo .tools button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('#photo .tools button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    P.tool = b.dataset.t;
+    ring.style.display = P.tool === 'brush' || P.tool === 'eraser' ? 'block' : 'none';
+  };
+});
+
+$('pcolor').oninput = e => P.color = e.target.value;
+$('psize').oninput = e => { P.size = +e.target.value; $('psize-val').textContent = P.size; updateRingSize(); };
+$('ptol').oninput = e => { P.tol = +e.target.value; $('ptol-val').textContent = P.tol; };
+
+function updateRingSize() {
+  ring.style.width = P.size + 'px';
+  ring.style.height = P.size + 'px';
+}
+updateRingSize();
+
+function getPt(e) {
+  const r = pcv.getBoundingClientRect();
+  return {
+    x: (e.clientX - r.left) * pcv.width / r.width,
+    y: (e.clientY - r.top) * pcv.height / r.height
+  };
+}
+
+/* --- Инструменты через pointer events --- */
+pcv.addEventListener('pointerdown', e => {
+  const l = P.layers[P.active];
+  if (!l) return;
+  pcv.setPointerCapture(e.pointerId);
+  const p = getPt(e);
+  P.lastPt = p;
+  P.drawing = true;
+
+  if (P.tool === 'brush' || P.tool === 'eraser') {
+    l.ctx.beginPath();
+    l.ctx.moveTo(p.x, p.y);
+    l.ctx.lineCap = 'round';
+    l.ctx.lineJoin = 'round';
+    l.ctx.lineWidth = P.size;
+    l.ctx.strokeStyle = P.color;
+    l.ctx.globalCompositeOperation = P.tool === 'eraser' ? 'destination-out' : 'source-over';
+    l.ctx.lineTo(p.x + 0.01, p.y + 0.01);
+    l.ctx.stroke();
+    compose();
+  } else if (P.tool === 'fill') {
+    floodFill(l, p.x, p.y, P.color);
+    compose();
+    pushHist();
+    P.drawing = false;
+  } else if (P.tool === 'wand') {
+    floodErase(l, p.x, p.y, P.tol);
+    compose();
+    pushHist();
+    P.drawing = false;
+  } else if (P.tool === 'pick') {
+    const x = clamp(Math.floor(p.x), 0, pcv.width - 1);
+    const y = clamp(Math.floor(p.y), 0, pcv.height - 1);
+    const d = l.ctx.getImageData(x, y, 1, 1).data;
+    P.color = '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2,'0')).join('');
+    $('pcolor').value = P.color;
+    P.drawing = false;
+  } else if (P.tool === 'rect' || P.tool === 'ellipse' || P.tool === 'line') {
+    P.shapeStart = p;
+    P.shapeSnap = l.ctx.getImageData(0, 0, pcv.width, pcv.height);
+    P.drawing = true;
+  }
+});
+
+pcv.addEventListener('pointermove', e => {
+  if (!P.drawing) return;
+  const l = P.layers[P.active];
+  const p = getPt(e);
+  if ((P.tool === 'brush' || P.tool === 'eraser') && P.lastPt) {
+    l.ctx.lineTo(p.x, p.y);
+    l.ctx.stroke();
+    compose();
+    P.lastPt = p;
+  } else if (P.shapeSnap && (P.tool === 'rect' || P.tool === 'ellipse' || P.tool === 'line')) {
+    l.ctx.putImageData(P.shapeSnap, 0, 0);
+    drawShape(l.ctx, P.tool, P.shapeStart, p);
+    compose();
+  }
+});
+
+function drawShape(ctx, tool, a, b) {
+  ctx.fillStyle = P.color;
+  ctx.strokeStyle = P.color;
+  ctx.lineWidth = P.size;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  if (tool === 'rect') {
+    ctx.rect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+    ctx.fill();
+  } else if (tool === 'ellipse') {
+    ctx.ellipse((a.x + b.x) / 2, (a.y + b.y) / 2,
+      Math.abs(b.x - a.x) / 2, Math.abs(b.y - a.y) / 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    ctx.stroke();
+  }
+}
+
+function endStroke() {
+  if (!P.drawing) return;
+  P.drawing = false;
+  const l = P.layers[P.active];
+  if (l) l.ctx.globalCompositeOperation = 'source-over';
+  P.shapeSnap = null;
+  P.shapeStart = null;
+  if (['brush','eraser','rect','ellipse','line'].includes(P.tool)) pushHist();
+}
+pcv.addEventListener('pointerup', endStroke);
+pcv.addEventListener('pointercancel', endStroke);
+
+/* Кольцо-курсор */
+pcv.addEventListener('pointermove', e => {
+  if (P.tool !== 'brush' && P.tool !== 'eraser') { ring.style.display = 'none'; return; }
+  ring.style.display = 'block';
+  ring.style.left = e.clientX + 'px';
+  ring.style.top = e.clientY + 'px';
+});
+pcv.addEventListener('pointerleave', () => ring.style.display = 'none');
+pcv.addEventListener('pointerenter', () => {
+  if (P.tool === 'brush' || P.tool === 'eraser') ring.style.display = 'block';
+});
+
+/* --- Заливка --- */
+function floodFill(layer, fx, fy, hex) {
+  const w = pcv.width, h = pcv.height;
+  const sx = Math.floor(fx), sy = Math.floor(fy);
+  if (sx < 0 || sy < 0 || sx >= w || sy >= h) return;
+  const img = layer.ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  const i0 = (sy * w + sx) * 4;
+  const sr = d[i0], sg = d[i0+1], sb = d[i0+2], sa = d[i0+3];
+  const [nr, ng, nb] = hexToRgb(hex);
+  if (sr === nr && sg === ng && sb === nb && sa === 255) return;
+
+  const tol = P.tol;
+  const visited = new Uint8Array(w * h);
+  const stack = [sx, sy];
+  while (stack.length) {
+    const y = stack.pop(), x = stack.pop();
+    const p = y * w + x;
+    if (visited[p]) continue;
+    visited[p] = 1;
+    const i = p * 4;
+    if (Math.abs(d[i]   - sr) > tol || Math.abs(d[i+1] - sg) > tol ||
+        Math.abs(d[i+2] - sb) > tol || Math.abs(d[i+3] - sa) > tol) continue;
+    d[i] = nr; d[i+1] = ng; d[i+2] = nb; d[i+3] = 255;
+    if (x > 0)     stack.push(x - 1, y);
+    if (x < w - 1) stack.push(x + 1, y);
+    if (y > 0)     stack.push(x, y - 1);
+    if (y < h - 1) stack.push(x, y + 1);
+  }
+  layer.ctx.putImageData(img, 0, 0);
+}
+
+/* --- Волшебная палочка: стирает область одного цвета --- */
+function floodErase(layer, fx, fy, tol) {
+  const w = pcv.width, h = pcv.height;
+  const sx = Math.floor(fx), sy = Math.floor(fy);
+  if (sx < 0 || sy < 0 || sx >= w || sy >= h) return;
+  const img = layer.ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  const i0 = (sy * w + sx) * 4;
+  const sr = d[i0], sg = d[i0+1], sb = d[i0+2], sa = d[i0+3];
+  if (sa === 0) return;
+
+  const visited = new Uint8Array(w * h);
+  const stack = [sx, sy];
+  while (stack.length) {
+    const y = stack.pop(), x = stack.pop();
+    const p = y * w + x;
+    if (visited[p]) continue;
+    visited[p] = 1;
+    const i = p * 4;
+    if (Math.abs(d[i]   - sr) > tol || Math.abs(d[i+1] - sg) > tol ||
+        Math.abs(d[i+2] - sb) > tol || Math.abs(d[i+3] - sa) > tol) continue;
+    d[i+3] = 0;
+    if (x > 0)     stack.push(x - 1, y);
+    if (x < w - 1) stack.push(x + 1, y);
+    if (y > 0)     stack.push(x, y - 1);
+    if (y < h - 1) stack.push(x, y + 1);
+  }
+  layer.ctx.putImageData(img, 0, 0);
+}
+
+/* --- Авто-вырезка фона: убирает цвет углов от краёв изображения --- */
+function cutBackground() {
+  const l = P.layers[P.active];
+  if (!l) return;
+  const w = pcv.width, h = pcv.height;
+  const img = l.ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  const sr = d[0], sg = d[1], sb = d[2], sa = d[3];
+  if (sa === 0) { alert('Слой уже прозрачный'); return; }
+
+  const tol = P.tol;
+  const visited = new Uint8Array(w * h);
+  const stack = [];
+  for (let x = 0; x < w; x++) { stack.push(x, 0); stack.push(x, h - 1); }
+  for (let y = 0; y < h; y++) { stack.push(0, y); stack.push(w - 1, y); }
+
+  let changed = false;
+  while (stack.length) {
+    const y = stack.pop(), x = stack.pop();
+    const p = y * w + x;
+    if (visited[p]) continue;
+    visited[p] = 1;
+    const i = p * 4;
+    if (Math.abs(d[i]   - sr) > tol || Math.abs(d[i+1] - sg) > tol ||
+        Math.abs(d[i+2] - sb) > tol || Math.abs(d[i+3] - sa) > tol) continue;
+    d[i+3] = 0;
+    changed = true;
+    if (x > 0)     stack.push(x - 1, y);
+    if (x < w - 1) stack.push(x + 1, y);
+    if (y > 0)     stack.push(x, y - 1);
+    if (y < h - 1) stack.push(x, y + 1);
+  }
+  if (!changed) {
+    alert('Не удалось найти однородный фон. Увеличьте допуск или уберите фон палочкой 🪄 вручную.');
+    return;
+  }
+  l.ctx.putImageData(img, 0, 0);
+  compose(); pushHist();
+}
+
+function addLayer() {
+  P.layers.push(newLayer('Слой ' + P.layers.length));
+  P.active = P.layers.length - 1;
+  renderLayers(); pushHist();
+}
+function dupLayer() {
+  const src = P.layers[P.active];
+  if (!src) return;
+  const l = newLayer(src.name + ' копия', src.opacity);
+  l.blend = src.blend;
+  l.ctx.drawImage(src.canvas, 0, 0);
+  P.layers.splice(P.active + 1, 0, l);
+  P.active++;
+  renderLayers(); compose(); pushHist();
+}
+function delLayer() {
+  if (P.layers.length <= 1) return;
+  P.layers.splice(P.active, 1);
+  P.active = clamp(P.active, 0, P.layers.length - 1);
+  renderLayers(); compose(); pushHist();
+}
+function mergeDown() {
+  if (P.active <= 0) return;
+  const top = P.layers[P.active], bot = P.layers[P.active - 1];
+  bot.ctx.globalAlpha = top.opacity;
+  bot.ctx.globalCompositeOperation = top.blend || 'source-over';
+  bot.ctx.drawImage(top.canvas, 0, 0);
+  bot.ctx.globalAlpha = 1;
+  bot.ctx.globalCompositeOperation = 'source-over';
+  P.layers.splice(P.active, 1);
+  P.active--;
+  renderLayers(); compose(); pushHist();
+}
+
+function transformLayer(mode) {
+  const l = P.layers[P.active];
+  if (!l) return;
+  const w = pcv.width, h = pcv.height;
+  const src = l.ctx.getImageData(0, 0, w, h);
+  const tmp = document.createElement('canvas');
+  tmp.width = w; tmp.height = h;
+  const t = tmp.getContext('2d');
+  t.translate(w / 2, h / 2);
+  if (mode === 'flipH') t.scale(-1, 1);
+  else if (mode === 'flipV') t.scale(1, -1);
+  else t.rotate(Math.PI / 2);
+  t.putImageData(src, -w / 2, -h / 2);
+  l.ctx.clearRect(0, 0, w, h);
+  l.ctx.drawImage(tmp, 0, 0);
+  compose(); pushHist();
+}
+
+function applyFx(css) {
+  const l = P.layers[P.active];
+  if (!l) return;
+  const tmp = document.createElement('canvas');
+  tmp.width = pcv.width; tmp.height = pcv.height;
+  const tctx = tmp.getContext('2d');
+  tctx.filter = css;
+  tctx.drawImage(l.canvas, 0, 0);
+  l.ctx.clearRect(0, 0, pcv.width, pcv.height);
+  l.ctx.drawImage(tmp, 0, 0);
+  compose(); pushHist();
+}
+
+/* --- История --- */
+function snapshot() {
+  return {
+    active: P.active,
+    layers: P.layers.map(l => {
+      const c = document.createElement('canvas');
+      c.width = pcv.width; c.height = pcv.height;
+      c.getContext('2d').drawImage(l.canvas, 0, 0);
+      return { name: l.name, canvas: c, visible: l.visible, opacity: l.opacity, blend: l.blend };
+    })
+  };
+}
+
+function pushHist() {
+  if (P.lock) return;
+  P.history = P.history.slice(0, P.histIdx + 1);
+  P.history.push(snapshot());
+  if (P.history.length > P.maxHistory) P.history.shift();
+  P.histIdx = P.history.length - 1;
+  updateHistButtons();
+}
+
+function restore(snap) {
+  P.lock = true;
+  P.layers = snap.layers.map(s => {
+    const c = document.createElement('canvas');
+    c.width = pcv.width; c.height = pcv.height;
+    c.getContext('2d').drawImage(s.canvas, 0, 0);
+    return { name: s.name, canvas: c, ctx: c.getContext('2d'), visible: s.visible, opacity: s.opacity, blend: s.blend || 'source-over' };
+  });
+  P.active = clamp(snap.active, 0, P.layers.length - 1);
+  compose(); renderLayers();
+  P.lock = false;
+}
+
+function undo() {
+  if (P.histIdx <= 0) return;
+  P.histIdx--;
+  restore(P.history[P.histIdx]);
+  updateHistButtons();
+}
+function redo() {
+  if (P.histIdx >= P.history.length - 1) return;
+  P.histIdx++;
+  restore(P.history[P.histIdx]);
+  updateHistButtons();
+}
+function updateHistButtons() {
+  $('undo-btn').disabled = P.histIdx <= 0;
+  $('redo-btn').disabled = P.histIdx >= P.history.length - 1;
+}
+
+function savePhoto() {
+  const a = document.createElement('a');
+  a.download = 'photo-' + Date.now() + '.png';
+  a.href = pcv.toDataURL();
+  a.click();
+}
+
+/* Импорт картинки в фоторедактор */
+$('photo-file').onchange = e => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const img = new Image();
+  img.onload = () => {
+    const l = newLayer(f.name.slice(0, 20));
+    const s = Math.min(pcv.width / img.width, pcv.height / img.height);
+    const dw = img.width * s, dh = img.height * s;
+    l.ctx.drawImage(img, (pcv.width - dw) / 2, (pcv.height - dh) / 2, dw, dh);
+    P.layers.push(l);
+    P.active = P.layers.length - 1;
+    renderLayers(); compose(); pushHist();
+    URL.revokeObjectURL(img.src);
+  };
+  img.src = URL.createObjectURL(f);
+};
+
+initPhoto();
+
+/* ============================================
+   ВИДЕОРЕДАКТОР
+   ============================================ */
+const vcv = $('vcv');
+const vctx = vcv.getContext('2d');
+const hiddenMedia = $('hidden-media');
+
+const V = {
+  clips: [], media: {}, time: 0, playing: false, duration: 30,
+  zoom: 60, selected: null, raf: null, lastTs: 0, inited: false, muted: false
+};
+
+function initVideo() {
+  if (V.inited) return;
+  V.inited = true;
+  drawTimeline();
+  drawFrame(0);
+
+  $('vid-file').onchange = e => {
+    [...e.target.files].forEach(f => {
+      const id = uid('m');
+      if (f.type.startsWith('video')) {
+        const el = document.createElement('video');
+        el.src = URL.createObjectURL(f);
+        el.preload = 'metadata';
+        el.muted = V.muted;
+        el.playsInline = true;
+        hiddenMedia.appendChild(el);
+        el.onloadedmetadata = () => {
+          V.media[id] = { id, name: f.name, type: 'video', el, dur: el.duration || 5 };
+          renderMedia();
+        };
+        el.onerror = () => { alert('Не удалось загрузить: ' + f.name); el.remove(); };
+      } else if (f.type.startsWith('image')) {
+        const el = new Image();
+        el.src = URL.createObjectURL(f);
+        hiddenMedia.appendChild(el);
+        el.onload = () => {
+          V.media[id] = { id, name: f.name, type: 'image', el, dur: 3 };
+          renderMedia();
+        };
+      }
+    });
+    e.target.value = '';
+  };
+
+  // Клик по пустому месту таймлайна — скраб
+  const body = $('tl-body');
+  body.addEventListener('pointerdown', e => {
+    if (e.target.closest('.clip')) return;
+    const move = ev => {
+      const r = body.getBoundingClientRect();
+      const x = ev.clientX - r.left - 80 + body.scrollLeft;
+      V.time = clamp(x / V.zoom, 0, V.duration);
+      updatePlayhead();
+      drawFrame(V.time);
+    };
+    move(e);
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  });
+
+  // Масштаб таймлайна
+  $('tl-zoom').oninput = e => {
+    V.zoom = +e.target.value;
+    drawTimeline();
+  };
+}
+
+function renderMedia() {
+  const box = $('media-list');
+  box.innerHTML = '';
+  const items = Object.values(V.media);
+  if (!items.length) { box.innerHTML = '<div class="empty">Пусто</div>'; return; }
+  items.forEach(m => {
+    const d = document.createElement('div');
+    d.className = 'media-item';
+    d.innerHTML = `
+      <span>${m.type === 'video' ? '🎬' : '🖼'}</span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${escapeHtml(m.name)}</span>
+      <span class="del" title="Удалить">✕</span>
+    `;
+    d.onclick = e => {
+      if (e.target.classList.contains('del')) { deleteMedia(m.id); return; }
+      addClip(m.id);
+    };
+    box.appendChild(d);
+  });
+}
+
+function deleteMedia(id) {
+  V.clips = V.clips.filter(c => c.mediaId !== id);
+  const m = V.media[id];
+  if (m?.el) { if (m.type === 'video') m.el.pause(); m.el.src = ''; m.el.remove(); }
+  delete V.media[id];
+  V.selected = null;
+  renderMedia(); drawTimeline(); drawFrame(V.time);
+}
+
+function addClip(id) {
+  const m = V.media[id];
+  if (!m) return;
+  const c = {
+    id: uid('c'), type: m.type, mediaId: id,
+    start: V.time, dur: m.dur || 3, inPoint: 0, fx: 'none'
+  };
+  V.clips.push(c);
+  if (c.start + c.dur > V.duration) V.duration = c.start + c.dur + 2;
+  V.selected = c.id;
+  drawTimeline();
+  drawFrame(V.time);
+}
+
+function addText() {
+  const txt = prompt('Текст:', 'Привет!');
+  if (!txt) return;
+  const c = {
+    id: uid('c'), type: 'text', text: txt,
+    start: V.time, dur: 3, fx: 'none'
+  };
+  V.clips.push(c);
+  if (c.start + c.dur > V.duration) V.duration = c.start + c.dur + 2;
+  V.selected = c.id;
+  drawTimeline();
+  drawFrame(V.time);
+}
+
+function drawTimeline() {
+  const cont = $('tracks');
+  cont.innerHTML = '';
+  cont.style.width = (V.duration * V.zoom + 120) + 'px';
+
+  ['Видео/Фото', 'Текст'].forEach((name, trIdx) => {
+    const tr = document.createElement('div');
+    tr.className = 'track';
+    tr.innerHTML = `<div class="label">${name}</div>`;
+
+    V.clips
+      .filter(c => (trIdx === 0 ? c.type !== 'text' : c.type === 'text'))
+      .forEach(c => {
+        const el = document.createElement('div');
+        el.className = 'clip ' + (c.type === 'text' ? 'txt' : c.type === 'image' ? 'img' : 'vid');
+        if (c.id === V.selected) el.classList.add('sel');
+        el.style.left = (c.start * V.zoom) + 'px';
+        el.style.width = Math.max(20, c.dur * V.zoom) + 'px';
+        el.textContent = c.type === 'text' ? c.text : (V.media[c.mediaId]?.name || '?');
+        el.innerHTML += '<div class="trim l"></div><div class="trim r"></div>';
+
+        // Выбор + перетаскивание
+        el.addEventListener('pointerdown', e => {
+          if (e.target.classList.contains('trim')) return;
+          e.stopPropagation();
+          e.preventDefault();
+          V.selected = c.id;
+          drawTimeline();
+          el = e.currentTarget;
+          const sx = e.clientX;
+          const os = c.start;
+          const move = ev => {
+            const dx = (ev.clientX - sx) / V.zoom;
+            c.start = Math.max(0, os + dx);
+            el.style.left = (c.start * V.zoom) + 'px';
+          };
+          const up = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+            if (c.start + c.dur > V.duration) V.duration = c.start + c.dur + 2;
+            drawTimeline();
+          };
+          window.addEventListener('pointermove', move);
+          window.addEventListener('pointerup', up);
+        });
+
+        // Трим слева
+        const trimL = el.querySelector('.trim.l');
+        trimL.addEventListener('pointerdown', e => {
+          e.stopPropagation();
+          e.preventDefault();
+          const sx = e.clientX;
+          const os = c.start, od = c.dur, oi = c.inPoint || 0;
+          const move = ev => {
+            const dx = (ev.clientX - sx) / V.zoom;
+            const ns = clamp(os + dx, 0, os + od - 0.1);
+            const delta = ns - os;
+            c.start = ns;
+            c.dur = od - delta;
+            if (c.type === 'video') c.inPoint = oi + delta;
+            el.style.left = (c.start * V.zoom) + 'px';
+            el.style.width = Math.max(20, c.dur * V.zoom) + 'px';
+          };
+          const up = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+            drawTimeline(); drawFrame(V.time);
+          };
+          window.addEventListener('pointermove', move);
+          window.addEventListener('pointerup', up);
+        });
+
+        // Трим справа
+        const trimR = el.querySelector('.trim.r');
+        trimR.addEventListener('pointerdown', e => {
+          e.stopPropagation();
+          e.preventDefault();
+          const sx = e.clientX;
+          const od = c.dur;
+          const move = ev => {
+            const dx = (ev.clientX - sx) / V.zoom;
+            c.dur = Math.max(0.1, od + dx);
+            el.style.width = Math.max(20, c.dur * V.zoom) + 'px';
+          };
+          const up = () => {
+            window.removeEventListener('pointermove', move);
+            window.removeEventListener('pointerup', up);
+            if (c.start + c.dur > V.duration) V.duration = c.start + c.dur + 2;
+            drawTimeline(); drawFrame(V.time);
+          };
+          window.addEventListener('pointermove', move);
+          window.addEventListener('pointerup', up);
+        });
+
+        tr.appendChild(el);
+      });
+    cont.appendChild(tr);
+  });
+  updatePlayhead();
+}
+
+function updatePlayhead() {
+  const px = 80 + V.time * V.zoom;
+  $('playhead').style.left = px + 'px';
+  $('vtime').textContent = fmtTime(V.time, true);
+
+  // Авто-скролл плейхеда
+  const body = $('tl-body');
+  const scrolled = body.scrollLeft;
+  const visibleW = body.clientWidth - 80;
+  if (px > scrolled + visibleW - 40) body.scrollLeft = px - visibleW + 100;
+  else if (px < scrolled + 20) body.scrollLeft = Math.max(0, px - 100);
+}
+
+function vidToggle() {
+  V.playing = !V.playing;
+  $('play').textContent = V.playing ? '⏸' : '▶';
+  if (V.playing) {
+    V.lastTs = performance.now();
+    V.raf = requestAnimationFrame(loop);
+  } else {
+    pauseAll();
+    if (V.raf) cancelAnimationFrame(V.raf);
+    V.raf = null;
+  }
+}
+
+function vidSeek(d) {
+  V.time = clamp(V.time + d, 0, V.duration);
+  updatePlayhead();
+  drawFrame(V.time);
+}
+
+function loop(ts) {
+  if (!V.playing) return;
+  const dt = Math.min(0.1, (ts - V.lastTs) / 1000);
+  V.lastTs = ts;
+  V.time += dt;
+  if (V.time >= V.duration) {
+    V.time = V.duration;
+    updatePlayhead();
+    drawFrame(V.time);
+    vidToggle();
+    return;
+  }
+  updatePlayhead();
+  drawFrame(V.time);
+  V.raf = requestAnimationFrame(loop);
+}
+
+function pauseAll() {
+  Object.values(V.media).forEach(m => {
+    if (m.type === 'video' && m.el) m.el.pause();
+  });
+}
+
+function toggleMute() {
+  V.muted = !V.muted;
+  Object.values(V.media).forEach(m => {
+    if (m.type === 'video' && m.el) m.el.muted = V.muted;
+  });
+  $('mute-btn').textContent = V.muted ? '🔇' : '🔊';
+}
+
+function drawFrame(t) {
+  vctx.fillStyle = '#000';
+  vctx.fillRect(0, 0, vcv.width, vcv.height);
+
+  const active = V.clips.filter(c => t >= c.start && t < c.start + c.dur);
+  const activeIds = new Set(active.map(c => c.id));
+
+  // Пауза видео вне диапазона
+  V.clips.forEach(c => {
+    if (c.type === 'video' && !activeIds.has(c.id)) {
+      const m = V.media[c.mediaId];
+      if (m?.el && !m.el.paused) m.el.pause();
+    }
+  });
+
+  active.sort((a, b) => a.start - b.start).forEach(c => {
+    vctx.save();
+    let zoom = 1, filter = 'none';
+    if (c.fx === 'zoom') {
+      const p = (t - c.start) / c.dur;
+      zoom = 1 + p * 0.4;
+    } else if (c.fx !== 'none') {
+      filter = c.fx;
+    }
+    vctx.filter = filter;
+    vctx.translate(vcv.width / 2, vcv.height / 2);
+    vctx.scale(zoom, zoom);
+    vctx.translate(-vcv.width / 2, -vcv.height / 2);
+
+    if (c.type === 'video') {
+      const m = V.media[c.mediaId];
+      if (m?.el && m.el.readyState >= 2) {
+        const local = t - c.start + (c.inPoint || 0);
+        if (V.playing) {
+          if (m.el.paused) m.el.play().catch(() => {});
+          if (Math.abs(m.el.currentTime - local) > 0.5) m.el.currentTime = local;
+        } else if (!m.el.paused) {
+          m.el.pause();
+          m.el.currentTime = local;
+        } else {
+          m.el.currentTime = local;
+        }
+        drawFit(m.el, m.el.videoWidth, m.el.videoHeight);
+      }
+    } else if (c.type === 'image') {
+      const m = V.media[c.mediaId];
+      if (m?.el) drawFit(m.el, m.el.width, m.el.height);
+    } else if (c.type === 'text') {
+      vctx.fillStyle = '#fff';
+      vctx.font = 'bold 40px sans-serif';
+      vctx.textAlign = 'center';
+      vctx.textBaseline = 'middle';
+      vctx.shadowColor = '#000'; vctx.shadowBlur = 8;
+      vctx.fillText(c.text, vcv.width / 2, vcv.height - 80);
+    }
+    vctx.restore();
+  });
+}
+
+function drawFit(img, w, h) {
+  if (!w || !h) return;
+  const s = Math.min(vcv.width / w, vcv.height / h);
+  const dw = w * s, dh = h * s;
+  vctx.drawImage(img, (vcv.width - dw) / 2, (vcv.height - dh) / 2, dw, dh);
+}
+
+function splitClip() {
+  const t = V.time;
+  const toSplit = V.clips.filter(c => t > c.start + 0.1 && t < c.start + c.dur - 0.1);
+  if (!toSplit.length) return;
+  toSplit.forEach(c => {
+    const local = t - c.start;
+    const right = { ...c, id: uid('c'), start: t, dur: c.dur - local };
+    if (c.type === 'video') right.inPoint = (c.inPoint || 0) + local;
+    c.dur = local;
+    V.clips.push(right);
+  });
+  drawTimeline();
+}
+
+function delClip() {
+  if (!V.selected) return;
+  V.clips = V.clips.filter(c => c.id !== V.selected);
+  V.selected = null;
+  drawTimeline();
+  drawFrame(V.time);
+}
+
+function setFx(fx) {
+  const c = V.clips.find(x => x.id === V.selected);
+  if (!c) { alert('Сначала выберите клип на таймлайне'); return; }
+  c.fx = fx;
+  drawFrame(V.time);
+}
+
+function exportVid() {
+  if (!window.MediaRecorder) { alert('MediaRecorder не поддерживается браузером'); return; }
+  const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+    ? 'video/webm;codecs=vp9' : 'video/webm';
+  if (!confirm(`Записать видео ${Math.ceil(V.duration)} сек? Без звука.\nНе переключайте вкладку.`)) return;
+  if (V.playing) vidToggle();
+  V.time = 0;
+  drawFrame(0);
+
+  const stream = vcv.captureStream(30);
+  const rec = new MediaRecorder(stream, { mimeType: mime });
+  const chunks = [];
+  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  rec.onstop = () => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'video-' + Date.now() + '.webm';
+    a.click();
+  };
+  rec.start();
+
+  const start = performance.now();
+  const tick = () => {
+    const t = (performance.now() - start) / 1000;
+    V.time = Math.min(t, V.duration);
+    V.clips.forEach(c => {
+      if (c.type !== 'video') return;
+      const m = V.media[c.mediaId];
+      if (!m?.el) return;
+      const local = t - c.start + (c.inPoint || 0);
+      if (t >= c.start && t < c.start + c.dur) {
+        if (m.el.paused) m.el.play().catch(() => {});
+        if (Math.abs(m.el.currentTime - local) > 0.3) m.el.currentTime = local;
+      } else if (!m.el.paused) {
+        m.el.pause();
+      }
+    });
+    drawFrame(t);
+    updatePlayhead();
+    if (t >= V.duration) {
+      pauseAll();
+      setTimeout(() => rec.stop(), 200);
+      return;
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ============================================
+   ГОРЯЧИЕ КЛАВИШИ
+   ============================================ */
+document.addEventListener('keydown', e => {
+  const inInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName);
+  if (inInput) return;
+
+  const ctrl = e.ctrlKey || e.metaKey;
+  const photoActive = $('photo').classList.contains('on');
+
+  if (ctrl && e.key.toLowerCase() === 'z') {
+    if (photoActive) { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+    return;
+  }
+  if (ctrl && e.key.toLowerCase() === 'y') {
+    if (photoActive) { e.preventDefault(); redo(); }
+    return;
+  }
+
+  if (!photoActive) {
+    if (e.key === ' ') { e.preventDefault(); vidToggle(); }
+    else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); delClip(); }
+    else if (e.key.toLowerCase() === 's') { e.preventDefault(); splitClip(); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); vidSeek(-1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); vidSeek(1); }
+  } else {
+    if (e.key.toLowerCase() === 'b') selectTool('brush');
+    else if (e.key.toLowerCase() === 'e') selectTool('eraser');
+    else if (e.key.toLowerCase() === 'f') selectTool('fill');
+    else if (e.key.toLowerCase() === 'w') selectTool('wand');
+    else if (e.key.toLowerCase() === 'i') selectTool('pick');
+    else if (e.key.toLowerCase() === 'l') selectTool('line');
+    else if (e.key.toLowerCase() === 'r') selectTool('rect');
+    else if (e.key.toLowerCase() === 'o') selectTool('ellipse');
+  }
+});
+
+function selectTool(t) {
+  const btn = document.querySelector(`#photo .tools button[data-t="${t}"]`);
+  if (btn) btn.click();
+}
+
+/* Пауза видео при скрытии вкладки */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && V.playing) vidToggle();
+});
+</script>
+</body>
+</html>
